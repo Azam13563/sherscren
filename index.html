@@ -1,427 +1,473 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PUBG Elite Montage Editor - Ultra Stable</title>
-    <!-- Tailwind CSS -->
+    <title>PUBG MONTAGE PRO - المشروع الجامعي</title>
+    <!-- Tailwind CSS مع دعم RTL -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FFmpeg.wasm Core -->
+    <!-- FFmpeg.wasm -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <!-- Font Awesome للأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            background: #22d3ee;
-            cursor: pointer;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+        /* تخصيص شريط التمرير */
+        input[type=range] {
+            @apply appearance-none bg-transparent;
         }
-        .preset-btn {
-            @apply py-3 px-2 bg-gray-800/80 border border-white/10 rounded-xl text-[11px] font-bold uppercase hover:bg-cyan-500 hover:text-black transition-all active:scale-95 shadow-lg;
+        input[type=range]::-webkit-slider-runnable-track {
+            @apply bg-gray-700 h-2 rounded-full;
         }
-        .glow-text {
-            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        input[type=range]::-webkit-slider-thumb {
+            @apply appearance-none w-5 h-5 bg-cyan-400 rounded-full mt-[-4px] shadow-lg border-2 border-white;
         }
-        video::-webkit-media-controls-fullscreen-button {
-            display: flex !important;
+        input[type=range]::-moz-range-track {
+            @apply bg-gray-700 h-2 rounded-full;
         }
-        /* تحسين المس */
-        .btn-download {
-            @apply w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all shadow-[0_10px_30px_rgba(6,182,212,0.3)] disabled:opacity-50 disabled:cursor-not-allowed;
+        input[type=range]::-moz-range-thumb {
+            @apply w-5 h-5 bg-cyan-400 rounded-full border-2 border-white;
+        }
+        /* شريط التقدم */
+        .progress-bar {
+            @apply h-2 bg-gray-700 rounded-full overflow-hidden;
+        }
+        .progress-fill {
+            @apply h-full bg-gradient-to-l from-cyan-400 to-blue-600 transition-all duration-300;
+        }
+        /* بطاقات التأثيرات */
+        .effect-card {
+            @apply bg-gray-800/50 p-4 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-all;
         }
     </style>
 </head>
-<body class="bg-[#050507] text-white min-h-screen font-sans selection:bg-cyan-500 selection:text-black">
+<body class="bg-gradient-to-b from-[#0a0c12] to-[#030405] text-white font-sans min-h-screen">
 
-    <div class="container mx-auto px-4 py-8 flex flex-col items-center">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-5xl md:text-7xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 to-blue-600 glow-text">
-                ULTRA PUBG EDITOR
-            </h1>
-            <p class="text-gray-500 font-mono tracking-[0.4em] mt-2 uppercase text-[10px]">High Performance Rendering Engine v3.0</p>
-        </div>
+    <!-- رأس الصفحة -->
+    <header class="text-center py-8">
+        <h1 class="text-5xl md:text-7xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-l from-cyan-300 to-blue-700 drop-shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+            PUBG MONTAGE PRO
+        </h1>
+        <p class="text-gray-500 text-sm tracking-widest mt-2">مشروع تخرج 2025 - محرر الفيديو الاحترافي</p>
+    </header>
 
-        <!-- Main Editor Card -->
-        <div class="w-full max-w-5xl bg-[#0f1115] border-2 border-white/5 rounded-[2.5rem] p-6 md:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
-            
-            <!-- Upload / Preview Section -->
-            <div id="dropZone" class="relative group cursor-pointer border-2 border-dashed border-gray-800 hover:border-cyan-500/50 rounded-3xl p-6 text-center transition-all bg-black/40 mb-8 min-h-[300px] flex items-center justify-center">
+    <main class="container mx-auto px-4 pb-12 max-w-6xl">
+        <!-- منطقة رفع الفيديو والمعاينة -->
+        <div class="bg-gray-900/60 backdrop-blur-sm rounded-3xl p-6 border border-white/10 shadow-2xl mb-8">
+            <div id="dropZone" class="relative border-2 border-dashed border-gray-700 hover:border-cyan-500/50 rounded-2xl p-8 text-center cursor-pointer transition-all min-h-[300px] flex items-center justify-center bg-black/20">
                 <input type="file" id="videoInput" accept="video/*" class="hidden">
-                
-                <div id="uploadUI" class="space-y-6">
-                    <div class="mx-auto w-20 h-20 bg-cyan-500/10 rounded-full flex items-center justify-center border border-cyan-500/20">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
+                <div id="uploadUI" class="space-y-4">
+                    <div class="w-24 h-24 mx-auto bg-cyan-500/10 rounded-full flex items-center justify-center border border-cyan-500/30">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-cyan-400"></i>
                     </div>
-                    <div>
-                        <p class="text-2xl font-bold text-white mb-2">اختر الفيديو الآن</p>
-                        <p class="text-gray-500 text-sm italic">تم تحسين النظام ليتناسب مع مقاطع الـ 20 ثانية وما فوق</p>
-                    </div>
+                    <p class="text-2xl font-bold">اسحب الفيديو أو اضغط للرفع</p>
+                    <p class="text-gray-500">mp4, mov, avi - حتى 100 ميجابايت</p>
                 </div>
-
                 <div id="previewContainer" class="hidden w-full relative">
-                    <video id="miniPreview" class="w-full max-h-[450px] rounded-2xl border border-white/5 shadow-2xl bg-black object-contain" controls playsinline></video>
-                    <button onclick="document.getElementById('videoInput').click()" class="absolute -top-3 -right-3 bg-red-600 p-2 rounded-full shadow-xl hover:scale-110 transition-transform">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                        </svg>
+                    <video id="previewVideo" class="w-full max-h-[400px] rounded-xl shadow-2xl" controls playsinline></video>
+                    <button onclick="document.getElementById('videoInput').click()" class="absolute -top-3 -left-3 bg-red-600 p-3 rounded-full shadow-xl hover:scale-110 transition">
+                        <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Presets & Controls -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div class="lg:col-span-1 space-y-3">
-                    <p class="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4">Color Presets</p>
-                    <button onclick="applyPreset('vibrant')" class="preset-btn w-full">Vibrant Erangel</button>
-                    <button onclick="applyPreset('sharp')" class="preset-btn w-full">Ultra Sharp</button>
-                    <button onclick="applyPreset('cinematic')" class="preset-btn w-full">Cinematic Night</button>
-                    <button onclick="applyPreset('original')" class="preset-btn w-full">Reset</button>
+        <!-- لوحة التحكم (تظهر بعد رفع الفيديو) -->
+        <div id="controlPanel" class="hidden space-y-6">
+            <!-- خيارات القص والسرعة -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- قص الفيديو -->
+                <div class="effect-card">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><i class="fas fa-cut text-cyan-400"></i> قص المقطع</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">البداية (ثواني)</label>
+                            <input type="range" id="trimStart" min="0" max="100" step="0.1" value="0" class="w-full">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span id="startTimeDisplay">0.0</span>
+                                <span>المدة الكلية: <span id="totalDuration">0</span> ث</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">النهاية (ثواني)</label>
+                            <input type="range" id="trimEnd" min="0" max="100" step="0.1" value="100" class="w-full">
+                            <div class="text-left text-xs text-gray-500 mt-1" id="endTimeDisplay">100.0</div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="lg:col-span-3 bg-black/20 p-6 rounded-3xl border border-white/5 space-y-8">
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <label class="text-sm font-bold text-cyan-400 uppercase tracking-tighter">Sharpness / الحدة</label>
-                            <span id="sharpVal" class="bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-md text-xs font-mono">1.5</span>
+                <!-- سرعة الفيديو -->
+                <div class="effect-card">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><i class="fas fa-tachometer-alt text-yellow-400"></i> السرعة</h3>
+                    <div>
+                        <input type="range" id="speed" min="0.5" max="2.5" step="0.1" value="1.0" class="w-full">
+                        <div class="flex justify-between text-sm mt-2">
+                            <span>0.5x</span>
+                            <span id="speedValue" class="font-bold text-cyan-300">1.0x</span>
+                            <span>2.5x</span>
                         </div>
-                        <input type="range" id="sharpness" min="0" max="3" step="0.1" value="1.5" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none">
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <label class="text-sm font-bold text-yellow-500 uppercase tracking-tighter">Saturation / الألوان</label>
-                            <span id="satVal" class="bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-md text-xs font-mono">1.5</span>
-                        </div>
-                        <input type="range" id="saturation" min="0" max="3" step="0.1" value="1.5" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none">
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <label class="text-sm font-bold text-purple-500 uppercase tracking-tighter">Brightness / الإضاءة</label>
-                            <span id="brightVal" class="bg-purple-500/20 text-purple-500 px-3 py-1 rounded-md text-xs font-mono">1.0</span>
-                        </div>
-                        <input type="range" id="brightness" min="0.5" max="1.5" step="0.01" value="1.0" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none">
                     </div>
                 </div>
             </div>
 
-            <!-- إعدادات إضافية للحفظ -->
-            <div class="mt-6 p-4 bg-black/40 rounded-2xl border border-white/5">
-                <p class="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3">خيارات الضغط (للحفظ)</p>
-                <div class="flex gap-3 flex-wrap">
-                    <label class="flex items-center gap-2 text-xs">
-                        <input type="radio" name="quality" value="high" checked> جودة عالية (قد لا يحفظ)
-                    </label>
-                    <label class="flex items-center gap-2 text-xs">
-                        <input type="radio" name="quality" value="medium"> وسط (480p)
-                    </label>
-                    <label class="flex items-center gap-2 text-xs">
-                        <input type="radio" name="quality" value="low"> منخفض (360p) - أنجح
-                    </label>
+            <!-- تأثيرات الألوان -->
+            <div class="effect-card">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><i class="fas fa-palette text-purple-400"></i> تأثيرات الألوان</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">الحدّة</label>
+                        <input type="range" id="sharpness" min="0" max="3" step="0.1" value="1.5" class="w-full">
+                        <span id="sharpVal" class="text-xs text-cyan-400">1.5</span>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">التشبع</label>
+                        <input type="range" id="saturation" min="0" max="3" step="0.1" value="1.5" class="w-full">
+                        <span id="satVal" class="text-xs text-yellow-400">1.5</span>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">السطوع</label>
+                        <input type="range" id="brightness" min="0.5" max="1.5" step="0.01" value="1.0" class="w-full">
+                        <span id="brightVal" class="text-xs text-purple-400">1.0</span>
+                    </div>
                 </div>
-                <p class="text-[10px] text-gray-500 mt-2">اختر منخفضاً إذا واجهت مشكلة في الحفظ.</p>
+                <!-- بريسيتات سريعة -->
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button onclick="applyPreset('vibrant')" class="px-4 py-2 bg-cyan-600/20 rounded-xl text-sm hover:bg-cyan-600/40 transition">Vibrant</button>
+                    <button onclick="applyPreset('sharp')" class="px-4 py-2 bg-cyan-600/20 rounded-xl text-sm hover:bg-cyan-600/40 transition">Ultra Sharp</button>
+                    <button onclick="applyPreset('cinematic')" class="px-4 py-2 bg-cyan-600/20 rounded-xl text-sm hover:bg-cyan-600/40 transition">Cinematic</button>
+                    <button onclick="applyPreset('reset')" class="px-4 py-2 bg-gray-700 rounded-xl text-sm hover:bg-gray-600 transition">إعادة ضبط</button>
+                </div>
             </div>
 
-            <!-- Action Area -->
-            <div class="mt-8 space-y-4">
-                <button id="processBtn" class="w-full py-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl font-black text-xl uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all shadow-[0_10px_30px_rgba(6,182,212,0.3)]">
-                    بدء المعالجة القوية ⚡
+            <!-- خيارات التصدير -->
+            <div class="effect-card">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><i class="fas fa-cog text-green-400"></i> إعدادات التصدير</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <label class="flex items-center gap-2 p-2 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700">
+                        <input type="radio" name="quality" value="1080p" class="accent-cyan-400"> 1080p
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700">
+                        <input type="radio" name="quality" value="720p" checked class="accent-cyan-400"> 720p
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700">
+                        <input type="radio" name="quality" value="480p" class="accent-cyan-400"> 480p
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700">
+                        <input type="radio" name="quality" value="360p" class="accent-cyan-400"> 360p
+                    </label>
+                </div>
+                <div class="mt-3 text-xs text-gray-400">
+                    * الجودة العالية تستهلك ذاكرة أكبر. اختر 720p أو أقل لمقاطع طويلة.
+                </div>
+            </div>
+
+            <!-- زر المعالجة -->
+            <button id="processBtn" class="w-full py-5 bg-gradient-to-l from-cyan-500 to-blue-600 rounded-2xl font-black text-xl tracking-widest hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] transition-all disabled:opacity-50">
+                <i class="fas fa-magic ml-2"></i> ابدأ المعالجة الآن
+            </button>
+        </div>
+
+        <!-- شاشة التقدم -->
+        <div id="progressContainer" class="hidden mt-8 bg-gray-900/60 backdrop-blur-sm rounded-2xl p-6 border border-cyan-500/30">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-bold text-cyan-400"><i class="fas fa-spinner fa-pulse ml-2"></i> جاري المعالجة...</span>
+                <span id="progressPercent" class="font-mono text-cyan-400">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progressBar" class="progress-fill" style="width:0%"></div>
+            </div>
+            <p class="text-gray-500 text-xs mt-4 text-center">لا تغلق الصفحة. قد تستغرق العملية دقيقة أو اثنتين حسب طول الفيديو.</p>
+        </div>
+
+        <!-- النتيجة النهائية -->
+        <div id="resultContainer" class="hidden mt-8 bg-gray-900/60 backdrop-blur-sm rounded-2xl p-6 border border-green-500/30">
+            <div class="flex items-center gap-3 text-green-400 mb-4">
+                <i class="fas fa-check-circle text-2xl"></i>
+                <span class="font-bold">تم التجهيز بنجاح!</span>
+            </div>
+            <video id="outputVideo" controls playsinline class="w-full rounded-xl shadow-2xl mb-4"></video>
+            <div id="outputFileSize" class="text-sm text-gray-400 mb-4 text-center"></div>
+            <div class="grid grid-cols-2 gap-4">
+                <button id="downloadBtn" class="btn-download bg-gradient-to-l from-cyan-500 to-blue-600 py-4 rounded-xl font-bold hover:shadow-lg transition">
+                    <i class="fas fa-download ml-2"></i> تحميل الفيديو
                 </button>
-
-                <!-- Status -->
-                <div id="statusContainer" class="hidden mt-8 p-6 bg-black rounded-3xl border border-cyan-500/20">
-                    <div class="flex justify-between mb-4">
-                        <span id="statusText" class="text-cyan-400 font-bold text-xs animate-pulse">SYSTEM PROCESSING...</span>
-                        <span id="progressPercent" class="text-cyan-400 font-mono text-xs">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-900 h-4 rounded-full overflow-hidden">
-                        <div id="progressBar" class="h-full bg-cyan-500 transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.8)]" style="width: 0%"></div>
-                    </div>
-                    <p class="text-gray-600 text-[10px] mt-4 text-center">لا تغلق الصفحة، النظام يقوم بضغط الفيديو تلقائياً</p>
-                </div>
-
-                <!-- Result -->
-                <div id="resultArea" class="hidden mt-10 space-y-6">
-                    <div class="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl text-center text-green-400 font-bold text-sm">
-                        ✅ تم التجهيز! اضغط حفظ
-                    </div>
-                    <video id="previewVideo" controls playsinline class="w-full rounded-2xl border border-white/10 bg-black shadow-2xl"></video>
-                    
-                    <!-- معلومات حجم الملف -->
-                    <div id="fileSizeInfo" class="text-xs text-gray-400 text-center"></div>
-
-                    <!-- أزرار الحفظ -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="realDownloadBtn" class="btn-download col-span-1">
-                            حفظ عادي 💾
-                        </button>
-                        <button id="emergencyDownloadBtn" class="btn-download bg-orange-600 col-span-1">
-                            حفظ منخفض الجودة 🆘
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-gray-600 text-center">إذا فشل الحفظ العادي، استخدم الزر البرتقالي لضغط إضافي.</p>
-                </div>
+                <button id="emergencyBtn" class="btn-download bg-orange-600 py-4 rounded-xl font-bold hover:bg-orange-700 transition">
+                    <i class="fas fa-exclamation-triangle ml-2"></i> تحميل بجودة منخفضة (طوارئ)
+                </button>
             </div>
         </div>
-        
-        <p class="mt-8 text-gray-700 text-[10px] uppercase font-bold tracking-[0.5em]">Developed for Mobile Competitive Scene</p>
-    </div>
+    </main>
 
     <script>
-        (function() {
-            // تسريع التحميل وإدارة الذاكرة
-            const { createFFmpeg, fetchFile } = FFmpeg;
-            // إعدادات FFmpeg مع حد أقصى للذاكرة (محاولة)
-            const ffmpeg = createFFmpeg({ 
-                log: false,
-                corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
-                mainName: 'main',
-                // تحديد الذاكرة (قد لا يعمل في كل المتصفحات)
-            });
+        // استدعاء FFmpeg
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ 
+            log: false,
+            corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+        });
 
-            // عناصر DOM
-            const videoInput = document.getElementById('videoInput');
-            const miniPreview = document.getElementById('miniPreview');
-            const previewContainer = document.getElementById('previewContainer');
-            const uploadUI = document.getElementById('uploadUI');
-            const processBtn = document.getElementById('processBtn');
-            const statusContainer = document.getElementById('statusContainer');
-            const progressBar = document.getElementById('progressBar');
-            const progressPercent = document.getElementById('progressPercent');
-            const resultArea = document.getElementById('resultArea');
-            const previewVideo = document.getElementById('previewVideo');
-            const realDownloadBtn = document.getElementById('realDownloadBtn');
-            const emergencyDownloadBtn = document.getElementById('emergencyDownloadBtn');
-            const fileSizeInfo = document.getElementById('fileSizeInfo');
-            
-            // متغيرات عامة
-            let lastBlobUrl = null;
-            let lastProcessedBlob = null; // الاحتفاظ بال blob للمعالجة الطارئة
+        // عناصر DOM
+        const videoInput = document.getElementById('videoInput');
+        const dropZone = document.getElementById('dropZone');
+        const uploadUI = document.getElementById('uploadUI');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewVideo = document.getElementById('previewVideo');
+        const controlPanel = document.getElementById('controlPanel');
+        const processBtn = document.getElementById('processBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const resultContainer = document.getElementById('resultContainer');
+        const outputVideo = document.getElementById('outputVideo');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const emergencyBtn = document.getElementById('emergencyBtn');
+        const outputFileSize = document.getElementById('outputFileSize');
 
-            // رفع الفيديو
-            document.getElementById('dropZone').onclick = (e) => {
-                if (e.target.tagName !== 'VIDEO' && e.target.tagName !== 'BUTTON') videoInput.click();
-            };
+        // متغيرات عامة
+        let videoFile = null;
+        let videoDuration = 0;
+        let outputBlob = null;
+        let outputUrl = null;
 
-            videoInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const url = URL.createObjectURL(file);
-                    miniPreview.src = url;
-                    previewContainer.classList.remove('hidden');
-                    uploadUI.classList.add('hidden');
-                    updateFilters();
-                }
-            };
+        // أحداث رفع الفيديو
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'VIDEO' && e.target.tagName !== 'BUTTON') videoInput.click();
+        });
 
-            // تحديث الفلاتر على المعاينة
-            function updateFilters() {
-                const s = document.getElementById('sharpness').value;
-                const sat = document.getElementById('saturation').value;
-                const b = document.getElementById('brightness').value;
-                miniPreview.style.filter = `saturate(${sat}) brightness(${b}) contrast(${1 + (s*0.2)})`;
+        videoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                videoFile = file;
+                const url = URL.createObjectURL(file);
+                previewVideo.src = url;
+                previewContainer.classList.remove('hidden');
+                uploadUI.classList.add('hidden');
+                controlPanel.classList.remove('hidden');
+                // الحصول على مدة الفيديو
+                previewVideo.addEventListener('loadedmetadata', () => {
+                    videoDuration = previewVideo.duration;
+                    document.getElementById('totalDuration').innerText = videoDuration.toFixed(1);
+                    // ضبط أقصى قيمة لشرائط القص
+                    document.getElementById('trimStart').max = videoDuration;
+                    document.getElementById('trimEnd').max = videoDuration;
+                    document.getElementById('trimEnd').value = videoDuration;
+                    document.getElementById('endTimeDisplay').innerText = videoDuration.toFixed(1);
+                });
+                // تحديث الفلاتر على المعاينة
+                updatePreviewFilters();
             }
+        });
 
-            ['sharpness', 'saturation', 'brightness'].forEach(id => {
-                document.getElementById(id).oninput = (e) => {
-                    document.getElementById(id + 'Val').innerText = e.target.value;
-                    updateFilters();
-                };
+        // تحديث المعاينة بالفلاتر (تأثيرات الألوان)
+        function updatePreviewFilters() {
+            const sharp = document.getElementById('sharpness').value;
+            const sat = document.getElementById('saturation').value;
+            const bright = document.getElementById('brightness').value;
+            previewVideo.style.filter = `saturate(${sat}) brightness(${bright}) contrast(${1 + sharp*0.2})`;
+        }
+
+        // تحديث قيم الشرائط
+        document.getElementById('sharpness').addEventListener('input', (e) => {
+            document.getElementById('sharpVal').innerText = e.target.value;
+            updatePreviewFilters();
+        });
+        document.getElementById('saturation').addEventListener('input', (e) => {
+            document.getElementById('satVal').innerText = e.target.value;
+            updatePreviewFilters();
+        });
+        document.getElementById('brightness').addEventListener('input', (e) => {
+            document.getElementById('brightVal').innerText = e.target.value;
+            updatePreviewFilters();
+        });
+        document.getElementById('speed').addEventListener('input', (e) => {
+            document.getElementById('speedValue').innerText = e.target.value + 'x';
+        });
+        document.getElementById('trimStart').addEventListener('input', (e) => {
+            document.getElementById('startTimeDisplay').innerText = parseFloat(e.target.value).toFixed(1);
+        });
+        document.getElementById('trimEnd').addEventListener('input', (e) => {
+            document.getElementById('endTimeDisplay').innerText = parseFloat(e.target.value).toFixed(1);
+        });
+
+        // بريسيتات الألوان
+        window.applyPreset = function(type) {
+            const sharp = document.getElementById('sharpness');
+            const sat = document.getElementById('saturation');
+            const bright = document.getElementById('brightness');
+            if (type === 'vibrant') {
+                sharp.value = 1.2; sat.value = 2.0; bright.value = 1.1;
+            } else if (type === 'sharp') {
+                sharp.value = 2.5; sat.value = 1.4; bright.value = 1.0;
+            } else if (type === 'cinematic') {
+                sharp.value = 1.0; sat.value = 1.6; bright.value = 0.9;
+            } else {
+                sharp.value = 1.5; sat.value = 1.5; bright.value = 1.0;
+            }
+            // تحديث المعروض والتأثير
+            ['sharpness','saturation','brightness'].forEach(id => {
+                document.getElementById(id).dispatchEvent(new Event('input'));
             });
+        };
 
-            // بريسيتات الألوان
-            window.applyPreset = function(type) {
-                const s = document.getElementById('sharpness'), sat = document.getElementById('saturation'), b = document.getElementById('brightness');
-                if(type === 'vibrant') { s.value = 1.2; sat.value = 2.0; b.value = 1.1; }
-                else if(type === 'sharp') { s.value = 2.5; sat.value = 1.4; b.value = 1.0; }
-                else if(type === 'cinematic') { s.value = 1.0; sat.value = 1.6; b.value = 0.9; }
-                else { s.value = 1.5; sat.value = 1.5; b.value = 1.0; }
-                [s, sat, b].forEach(el => el.dispatchEvent(new Event('input')));
-            };
+        // معالجة الفيديو
+        processBtn.addEventListener('click', async () => {
+            if (!videoFile) return;
 
-            // معالجة الفيديو
-            processBtn.onclick = async () => {
-                const file = videoInput.files[0];
-                if (!file) return;
+            // تعطيل الأزرار وإظهار التقدم
+            processBtn.disabled = true;
+            progressContainer.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+            progressBar.style.width = '0%';
+            progressPercent.innerText = '0%';
 
-                // تعطيل الأزرار
-                processBtn.disabled = true;
-                statusContainer.classList.remove('hidden');
-                resultArea.classList.add('hidden');
-                progressBar.style.width = '0%';
-                progressPercent.innerText = '0%';
+            try {
+                // تحميل ffmpeg إن لم يكن محملاً
+                if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-                try {
-                    // تحميل ffmpeg إذا لم يكن محملاً
-                    if (!ffmpeg.isLoaded()) {
-                        await ffmpeg.load();
-                    }
+                ffmpeg.setProgress(({ ratio }) => {
+                    const percent = Math.round(ratio * 100);
+                    progressBar.style.width = percent + '%';
+                    progressPercent.innerText = percent + '%';
+                });
 
-                    // إعداد progress
-                    ffmpeg.setProgress(({ ratio }) => {
-                        const p = Math.max(0, Math.min(100, Math.round(ratio * 100)));
-                        progressBar.style.width = p + '%';
-                        progressPercent.innerText = p + '%';
-                    });
+                // قراءة قيم التحكم
+                const start = parseFloat(document.getElementById('trimStart').value);
+                const end = parseFloat(document.getElementById('trimEnd').value);
+                const speed = parseFloat(document.getElementById('speed').value);
+                const sharp = parseFloat(document.getElementById('sharpness').value);
+                const sat = parseFloat(document.getElementById('saturation').value);
+                const bright = parseFloat(document.getElementById('brightness').value) - 1.0; // تعديل للـ eq
 
-                    // قراءة الملف
-                    const inputName = 'in.mp4';
-                    const outputName = 'out.mp4';
-                    ffmpeg.FS('writeFile', inputName, await fetchFile(file));
+                // جودة التصدير
+                const quality = document.querySelector('input[name="quality"]:checked').value;
+                let scale, crf, bitrate;
+                if (quality === '1080p') { scale = '1920:1080'; crf = '28'; bitrate = '3M'; }
+                else if (quality === '720p') { scale = '1280:720'; crf = '30'; bitrate = '2M'; }
+                else if (quality === '480p') { scale = '854:480'; crf = '32'; bitrate = '1M'; }
+                else { scale = '640:360'; crf = '35'; bitrate = '800k'; }
 
-                    // قيم المستخدم
-                    const sharp = parseFloat(document.getElementById('sharpness').value);
-                    const sat = parseFloat(document.getElementById('saturation').value);
-                    const br = parseFloat(document.getElementById('brightness').value) - 1.0; // ffmpeg eq brightness فرق -1..1
-                    
-                    // تحديد إعدادات الجودة بناءً على الخيار المختار
-                    const quality = document.querySelector('input[name="quality"]:checked').value;
-                    let scale, crf, bitrate;
-                    if (quality === 'high') {
-                        scale = '720'; // عرض 720
-                        crf = '32';
-                        bitrate = '1.5M';
-                    } else if (quality === 'medium') {
-                        scale = '480';
-                        crf = '35';
-                        bitrate = '1M';
-                    } else {
-                        scale = '360';
-                        crf = '38';
-                        bitrate = '800k';
-                    }
+                // حساب مدة القطع
+                const duration = end - start;
+                const trimStart = start;
 
-                    // فلتر قوي جداً مع تصغير الدقة
-                    const filter = `scale=-2:${scale},unsharp=5:5:${sharp}:5:5:0,eq=saturation=${sat}:brightness=${br}`;
+                // إعداد الفلتر المركب
+                // نستخدم setpts لتغيير السرعة، unsharp و eq للألوان
+                const filter = `scale=${scale},setpts=${1/speed}*PTS,unsharp=5:5:${sharp}:5:5:0,eq=saturation=${sat}:brightness=${bright}`;
 
-                    // أوامر ffmpeg مضغوطة جداً
-                    await ffmpeg.run(
-                        '-i', inputName,
-                        '-vf', filter,
-                        '-c:v', 'libx264',
-                        '-crf', crf,
-                        '-b:v', bitrate,
-                        '-preset', 'ultrafast',
-                        '-movflags', '+faststart', // للبث المباشر
-                        '-c:a', 'copy', // نسخ الصوت دون تغيير
-                        outputName
-                    );
+                // كتابة الملف المدخل في نظام FFmpeg
+                const inputName = 'input.mp4';
+                const outputName = 'output.mp4';
+                ffmpeg.FS('writeFile', inputName, await fetchFile(videoFile));
 
-                    // قراءة النتيجة
-                    const data = ffmpeg.FS('readFile', outputName);
-                    const blob = new Blob([data.buffer], { type: 'video/mp4' });
-                    
-                    // تنظيف ملفات FFmpeg
-                    try { ffmpeg.FS('unlink', inputName); } catch(e) {}
-                    try { ffmpeg.FS('unlink', outputName); } catch(e) {}
+                // أوامر FFmpeg: قص (ss و t) ثم تطبيق الفلاتر
+                await ffmpeg.run(
+                    '-i', inputName,
+                    '-ss', trimStart.toString(),
+                    '-t', duration.toString(),
+                    '-vf', filter,
+                    '-c:v', 'libx264',
+                    '-crf', crf,
+                    '-b:v', bitrate,
+                    '-preset', 'ultrafast',
+                    '-movflags', '+faststart',
+                    '-c:a', 'aac', // إعادة ترميز الصوت ليتناسب مع السرعة
+                    '-b:a', '128k',
+                    outputName
+                );
 
-                    // تخزين blob
-                    if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
-                    lastBlobUrl = URL.createObjectURL(blob);
-                    lastProcessedBlob = blob;
+                // قراءة النتيجة
+                const data = ffmpeg.FS('readFile', outputName);
+                outputBlob = new Blob([data.buffer], { type: 'video/mp4' });
 
-                    // عرض النتيجة
-                    previewVideo.src = lastBlobUrl;
-                    
-                    // عرض حجم الملف
-                    const sizeMB = (blob.size / (1024 * 1024)).toFixed(2);
-                    fileSizeInfo.innerText = `حجم الملف: ${sizeMB} MB`;
-                    if (blob.size > 100 * 1024 * 1024) {
-                        fileSizeInfo.innerText += ' ⚠️ كبير جداً، قد لا يحفظ. استخدم الزر البرتقالي.';
-                    } else {
-                        fileSizeInfo.innerText += ' ✅ مناسب للحفظ.';
-                    }
+                // تنظيف
+                ffmpeg.FS('unlink', inputName);
+                ffmpeg.FS('unlink', outputName);
 
-                    resultArea.classList.remove('hidden');
-                    statusContainer.classList.add('hidden');
-                    processBtn.disabled = false;
+                // إنشاء رابط للمعاينة
+                if (outputUrl) URL.revokeObjectURL(outputUrl);
+                outputUrl = URL.createObjectURL(outputBlob);
+                outputVideo.src = outputUrl;
 
-                } catch (err) {
-                    console.error('FFmpeg error:', err);
-                    alert("❌ فشلت المعالجة. جرب اختيار جودة منخفضة أو فيديو أقصر.");
-                    statusContainer.classList.add('hidden');
-                    processBtn.disabled = false;
+                // عرض حجم الملف
+                const sizeMB = (outputBlob.size / (1024 * 1024)).toFixed(2);
+                outputFileSize.innerHTML = `حجم الملف: ${sizeMB} ميجابايت`;
+                if (outputBlob.size > 100 * 1024 * 1024) {
+                    outputFileSize.innerHTML += ' ⚠️ كبير جداً، استخدم زر الطوارئ إن لم يحفظ.';
                 }
-            };
 
-            // دالة الحفظ العامة
-            function downloadBlob(blob, filename) {
-                // محاولة باستخدام anchor
-                const url = URL.createObjectURL(blob);
+                // إظهار النتيجة
+                resultContainer.classList.remove('hidden');
+                progressContainer.classList.add('hidden');
+                processBtn.disabled = false;
+
+            } catch (err) {
+                console.error(err);
+                alert('حدث خطأ أثناء المعالجة. جرب جودة أقل أو فيديو أقصر.');
+                progressContainer.classList.add('hidden');
+                processBtn.disabled = false;
+            }
+        });
+
+        // تحميل عادي
+        downloadBtn.addEventListener('click', () => {
+            if (!outputBlob) return;
+            const a = document.createElement('a');
+            a.href = outputUrl;
+            a.download = 'PUBG_MONTAGE.mp4';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+        // تحميل طوارئ (ضغط إضافي)
+        emergencyBtn.addEventListener('click', async () => {
+            if (!outputBlob) return;
+            emergencyBtn.disabled = true;
+            emergencyBtn.innerHTML = '<i class="fas fa-spinner fa-pulse ml-2"></i> جاري الضغط...';
+
+            try {
+                if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+                const inputName = 'emergency_in.mp4';
+                const outputName = 'emergency_out.mp4';
+                ffmpeg.FS('writeFile', inputName, await fetchFile(new File([outputBlob], 'temp.mp4')));
+
+                // ضغط قوي جداً
+                await ffmpeg.run(
+                    '-i', inputName,
+                    '-c:v', 'libx264',
+                    '-crf', '42',
+                    '-b:v', '500k',
+                    '-preset', 'ultrafast',
+                    '-vf', 'scale=480:360',
+                    '-c:a', 'aac',
+                    '-b:a', '64k',
+                    '-movflags', '+faststart',
+                    outputName
+                );
+
+                const data = ffmpeg.FS('readFile', outputName);
+                const compressedBlob = new Blob([data.buffer], { type: 'video/mp4' });
+
+                ffmpeg.FS('unlink', inputName);
+                ffmpeg.FS('unlink', outputName);
+
+                // تحميل الملف المضغوط
+                const url = URL.createObjectURL(compressedBlob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = filename;
+                a.download = 'PUBG_MONTAGE_LOW.mp4';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 100);
+
+            } catch (e) {
+                console.error(e);
+                alert('فشل الضغط الإضافي. حاول مرة أخرى.');
+            } finally {
+                emergencyBtn.disabled = false;
+                emergencyBtn.innerHTML = '<i class="fas fa-exclamation-triangle ml-2"></i> تحميل بجودة منخفضة (طوارئ)';
             }
-
-            // الحفظ العادي
-            realDownloadBtn.onclick = () => {
-                if (!lastProcessedBlob) return;
-                downloadBlob(lastProcessedBlob, `PUBG_EDIT.mp4`);
-                setTimeout(() => {
-                    alert("إذا لم يبدأ التحميل، استخدم الزر البرتقالي.");
-                }, 1000);
-            };
-
-            // الحفظ الطارئ (ضغط إضافي)
-            emergencyDownloadBtn.onclick = async () => {
-                if (!lastProcessedBlob) return;
-
-                emergencyDownloadBtn.disabled = true;
-                emergencyDownloadBtn.innerText = 'جاري الضغط...';
-
-                try {
-                    // إعادة معالجة الملف الناتج بضغط أقوى
-                    if (!ffmpeg.isLoaded()) await ffmpeg.load();
-
-                    const inputName = 'emergency_in.mp4';
-                    const outputName = 'emergency_out.mp4';
-                    
-                    // تحويل blob إلى ملف
-                    ffmpeg.FS('writeFile', inputName, await fetchFile(new File([lastProcessedBlob], 'temp.mp4')));
-
-                    // ضغط شديد
-                    await ffmpeg.run(
-                        '-i', inputName,
-                        '-c:v', 'libx264',
-                        '-crf', '42',
-                        '-b:v', '500k',
-                        '-preset', 'ultrafast',
-                        '-vf', 'scale=-2:320', // 320p
-                        '-movflags', '+faststart',
-                        '-c:a', 'copy',
-                        outputName
-                    );
-
-                    const data = ffmpeg.FS('readFile', outputName);
-                    const compressedBlob = new Blob([data.buffer], { type: 'video/mp4' });
-
-                    // تنظيف
-                    try { ffmpeg.FS('unlink', inputName); } catch(e) {}
-                    try { ffmpeg.FS('unlink', outputName); } catch(e) {}
-
-                    // تحميل
-                    downloadBlob(compressedBlob, `PUBG_EMERGENCY.mp4`);
-
-                } catch (e) {
-                    console.error(e);
-                    alert("فشل الضغط الطارئ، حاول استخدام فيديو أقصر.");
-                } finally {
-                    emergencyDownloadBtn.disabled = false;
-                    emergencyDownloadBtn.innerText = 'حفظ منخفض الجودة 🆘';
-                }
-            };
-        })();
+        });
     </script>
 </body>
 </html>
