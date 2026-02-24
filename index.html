@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StreamDrop Ultra | P2P Transfer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --apple-blue: #0071e3;
+            --apple-dark: #161617;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #000;
+            color: #f5f5f7;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* لمنع التمرير وضمان Full Screen */
+        }
+
+        .main-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .glass-panel {
+            background: rgba(22, 22, 23, 0.7);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-apple {
+            background-color: var(--apple-blue);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-apple:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #0071e3 0%, #42a5f5 100%);
+            box-shadow: 0 0 15px rgba(0, 113, 227, 0.4);
+        }
+
+        #qrcode img {
+            border-radius: 20px;
+            padding: 12px;
+            background: #fff;
+            box-shadow: 0 0 30px rgba(255,255,255,0.1);
+        }
+
+        /* Full Screen Loader */
+        .pulse-ring {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--apple-blue);
+            box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(0, 113, 227, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 113, 227, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Logo Section -->
+        <div class="text-center mb-10 transition-all duration-700 transform" id="header-area">
+            <div class="mb-4 inline-block p-4 rounded-3xl bg-blue-600/10">
+                <i data-lucide="layers" class="w-10 h-10 text-blue-500"></i>
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight">StreamDrop <span class="text-blue-500">Ultra</span></h1>
+            <p class="text-zinc-500 mt-2 font-medium">Lossless Video Pipeline</p>
+        </div>
+
+        <!-- Mode Selection -->
+        <div id="selection-view" class="glass-panel p-8 space-y-4 text-center">
+            <h2 class="text-xl font-semibold mb-6">Choose Device Role</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="initPCMode()" class="flex items-center justify-between p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition">
+                    <div class="flex items-center gap-4">
+                        <i data-lucide="monitor" class="text-blue-400"></i>
+                        <span class="text-lg font-medium">Receiver (PC)</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-zinc-600"></i>
+                </button>
+                <button onclick="initMobileMode()" class="flex items-center justify-between p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition">
+                    <div class="flex items-center gap-4">
+                        <i data-lucide="smartphone" class="text-emerald-400"></i>
+                        <span class="text-lg font-medium">Sender (Mobile)</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-zinc-600"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- PC QR View -->
+        <div id="pc-view" class="hidden glass-panel p-10 space-y-8 text-center">
+            <div class="space-y-2">
+                <h2 class="text-2xl font-bold">Ready to Receive</h2>
+                <p class="text-zinc-400 text-sm">Scan to establish a P2P lossless bridge</p>
+            </div>
+            <div id="qrcode" class="flex justify-center transition-all duration-500 scale-110"></div>
+            <div id="connection-status" class="flex items-center justify-center gap-2 text-blue-400">
+                <div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
+                <span class="text-sm font-mono tracking-widest uppercase" id="peer-id-label">Waiting...</span>
+            </div>
+        </div>
+
+        <!-- Mobile File View -->
+        <div id="mobile-view" class="hidden glass-panel p-10 space-y-8 text-center">
+            <div class="pulse-ring mx-auto mb-6 flex items-center justify-center">
+                <i data-lucide="share-2" class="text-white w-8 h-8"></i>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-2xl font-bold">Securely Connected</h2>
+                <p class="text-zinc-400 text-sm">Quality: <span class="text-emerald-400">100% Native (Lossless)</span></p>
+            </div>
+            <label class="btn-apple block w-full p-5 rounded-2xl text-lg font-bold cursor-pointer shadow-lg">
+                Pick High-Res Video
+                <input type="file" id="fileInput" class="hidden" accept="video/*">
+            </label>
+        </div>
+
+        <!-- Progress View -->
+        <div id="transfer-view" class="hidden glass-panel p-10 w-full max-w-lg">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="p-3 bg-blue-500/20 rounded-2xl">
+                    <i data-lucide="file-video" class="text-blue-500"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 id="file-name-display" class="text-lg font-bold truncate">video_raw.mp4</h3>
+                    <p id="transfer-status-text" class="text-zinc-500 text-sm">Sending data chunks...</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between text-sm font-bold">
+                    <span id="speed-label" class="text-blue-400">0.00 MB/s</span>
+                    <span id="percent-label">0%</span>
+                </div>
+                <div class="h-3 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="progress-bar-fill h-full w-0 transition-all duration-200"></div>
+                </div>
+                <div class="flex justify-between text-xs text-zinc-500 font-mono">
+                    <span id="bytes-label">0 MB</span>
+                    <span id="total-label">0 MB</span>
+                </div>
+            </div>
+
+            <div id="complete-action" class="hidden mt-8">
+                <button id="downloadBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 p-5 rounded-2xl font-bold text-lg transition flex items-center justify-center gap-3">
+                    <i data-lucide="check-circle"></i> Save Original Video
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // -- Logic Engine --
+        const CHUNK_SIZE = 16384 * 8; // 128KB - Optimized for local network high speed
+        let peer = null;
+        let conn = null;
+        let receivedChunks = [];
+        let bytesReceived = 0;
+        let totalSize = 0;
+        let startTime = 0;
+        let fileName = "";
+
+        const $ = (id) => document.getElementById(id);
+        lucide.createIcons();
+
+        function initPCMode() {
+            $('selection-view').classList.add('hidden');
+            $('pc-view').classList.remove('hidden');
+
+            peer = new Peer();
+            peer.on('open', (id) => {
+                $('peer-id-label').innerText = "ID: " + id;
+                const shareURL = window.location.origin + window.location.pathname + "?peer=" + id;
+                new QRCode($("qrcode"), {
+                    text: shareURL,
+                    width: 220,
+                    height: 220,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            });
+
+            peer.on('connection', (connection) => {
+                conn = connection;
+                handleP2PHandshake();
+            });
+        }
+
+        function initMobileMode() {
+            const params = new URLSearchParams(window.location.search);
+            const targetId = params.get('peer');
+            if (!targetId) return alert("Please scan QR code from PC");
+
+            $('selection-view').classList.add('hidden');
+            $('mobile-view').classList.remove('hidden');
+
+            peer = new Peer();
+            peer.on('open', () => {
+                conn = peer.connect(targetId, { reliable: true });
+                handleP2PHandshake();
+            });
+        }
+
+        function handleP2PHandshake() {
+            conn.on('open', () => {
+                console.log("P2P Tunnel Securely Opened");
+                $('pc-view').classList.add('hidden');
+                $('mobile-view').classList.remove('hidden');
+                $('fileInput').addEventListener('change', startFileStream);
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'start') {
+                    prepareReceiver(data.name, data.size);
+                } else if (data.type === 'chunk') {
+                    processChunk(data.chunk);
+                }
+            });
+        }
+
+        async function startFileStream(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileName = file.name;
+            totalSize = file.size;
+            
+            conn.send({ type: 'start', name: fileName, size: totalSize });
+            showTransferUI(fileName, totalSize);
+
+            startTime = Date.now();
+            const stream = file.stream();
+            const reader = stream.getReader();
+            let sent = 0;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                // Sub-chunking for buffer safety
+                for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+                    const chunk = value.slice(i, i + CHUNK_SIZE);
+                    conn.send({ type: 'chunk', chunk: chunk.buffer });
+                    sent += chunk.length;
+                    updateProgress(sent);
+                }
+            }
+        }
+
+        function prepareReceiver(name, size) {
+            fileName = name;
+            totalSize = size;
+            receivedChunks = [];
+            bytesReceived = 0;
+            startTime = Date.now();
+            showTransferUI(name, size);
+            $('transfer-status-text').innerText = "Receiving original bits...";
+        }
+
+        function processChunk(buffer) {
+            receivedChunks.push(buffer);
+            bytesReceived += buffer.byteLength;
+            updateProgress(bytesReceived);
+
+            if (bytesReceived >= totalSize) {
+                completeTransfer();
+            }
+        }
+
+        function showTransferUI(name, size) {
+            $('mobile-view').classList.add('hidden');
+            $('pc-view').classList.add('hidden');
+            $('header-area').classList.add('scale-90', 'opacity-50');
+            $('transfer-view').classList.remove('hidden');
+            $('file-name-display').innerText = name;
+            $('total-label').innerText = (size / 1048576).toFixed(1) + " MB";
+        }
+
+        function updateProgress(current) {
+            const pct = ((current / totalSize) * 100).toFixed(0);
+            $('progress-bar').style.width = pct + "%";
+            $('percent-label').innerText = pct + "%";
+            $('bytes-label').innerText = (current / 1048576).toFixed(1) + " MB";
+
+            const now = Date.now();
+            const duration = (now - startTime) / 1000;
+            if (duration > 0.1) {
+                const speed = (current / 1048576 / duration).toFixed(2);
+                $('speed-label').innerText = speed + " MB/s";
+            }
+        }
+
+        function completeTransfer() {
+            $('transfer-status-text').innerText = "Transfer 100% Lossless";
+            $('transfer-status-text').classList.replace('text-zinc-500', 'text-emerald-400');
+            $('complete-action').classList.remove('hidden');
+
+            const blob = new Blob(receivedChunks, { type: 'video/mp4' });
+            const url = URL.createObjectURL(blob);
+            
+            $('downloadBtn').onclick = () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+            };
+        }
+
+        // Auto-detect connection from URL
+        window.addEventListener('load', () => {
+            if (new URLSearchParams(window.location.search).has('peer')) {
+                initMobileMode();
+            }
+        });
+    </script>
+</body>
+</html>
