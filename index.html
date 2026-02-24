@@ -10,8 +10,18 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@900&display=swap');
         body { font-family: 'Noto Sans Arabic', sans-serif; background: #000; color: #fff; height: 100vh; overflow: hidden; }
-        .screen-btn { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 24px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4); transition: 0.3s; }
-        .screen-btn:active { transform: scale(0.95); }
+        .screen-btn { 
+            background: #ef4444; 
+            border-radius: 24px; 
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.5); 
+            transition: 0.3s;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 0 40px rgba(239, 68, 68, 0.7); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+        }
         #remote-video { width: 100vw; height: 100vh; background: #000; object-fit: contain; }
     </style>
 </head>
@@ -19,39 +29,43 @@
 
     <!-- اختيار الدور -->
     <div id="selection-view" class="space-y-8 w-full max-w-sm text-center">
-        <h1 class="text-4xl font-black italic tracking-tighter text-blue-500">PUBG <span class="text-white">MIRROR</span></h1>
-        <p class="text-zinc-500 text-sm">هذا الإصدار مخصص لبث "الشاشة" فقط</p>
+        <h1 class="text-4xl font-black italic tracking-tighter text-red-500">PUBG <span class="text-white">ULTIMATE</span></h1>
+        <p class="text-zinc-500 text-sm">محاولة أخيرة لتجاوز قيود نظام لينوفو</p>
         
         <div class="flex flex-col gap-4">
             <button onclick="setupPC()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold">جهاز الاستقبال (البي سي)</button>
-            <button onclick="setupTablet()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold text-blue-400 border-blue-500/30">جهاز اللعب (التابلت)</button>
+            <button onclick="setupTablet()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold text-red-400 border-red-500/30">جهاز اللعب (التابلت)</button>
         </div>
     </div>
 
     <!-- واجهة البي سي -->
     <div id="pc-view" class="hidden text-center space-y-6">
-        <div id="qrcode" class="p-4 bg-white rounded-3xl inline-block shadow-2xl border-4 border-blue-500"></div>
-        <p class="font-bold">امسح الكود بالتابلت للبدء</p>
+        <div id="qrcode" class="p-4 bg-white rounded-3xl inline-block shadow-2xl border-4 border-red-500"></div>
+        <p class="font-bold text-red-500">امسح الكود بالتابلت الآن</p>
     </div>
 
     <!-- واجهة التابلت -->
     <div id="tablet-view" class="hidden w-full max-w-sm space-y-8 text-center">
-        <div class="bg-blue-900/20 border border-blue-500/30 p-5 rounded-3xl text-xs text-blue-300 leading-relaxed">
-            <b>تنبيه هام جداً:</b><br>
-            بمجرد الضغط على الزر، ستظهر رسالة من أندرويد تسألك عن "البدء الآن" لتصوير الشاشة. وافق عليها فوراً.
+        <div class="bg-red-900/20 border border-red-500/30 p-5 rounded-3xl text-xs text-red-300 leading-relaxed">
+            <b>تحذير التجاوز:</b><br>
+            إذا ضغطت الزر ولم تظهر نافذة "البدء الآن"، فجهازك يمنع المتصفحات تماماً من البث. تأكد من إغلاق أي تطبيقات أخرى تسجل الشاشة.
         </div>
 
         <button id="start-screen-btn" class="screen-btn w-full py-8 font-black text-2xl uppercase tracking-widest">
-            بث الشاشة للبي سي
+            تنشيط البث الإجباري
         </button>
 
-        <p class="text-[10px] text-zinc-600">تأكد أنك تستخدم Chrome بوضع "موقع سطح المكتب"</p>
+        <div class="space-y-2 text-[10px] text-zinc-600">
+            <p>1. افتح الرابط في Google Chrome حصراً</p>
+            <p>2. فعل "Desktop Site" من النقاط الثلاث</p>
+            <p>3. تأكد من إلغاء "وضع توفير الطاقة"</p>
+        </div>
     </div>
 
     <!-- العرض المباشر (PC) -->
     <div id="live-view" class="hidden fixed inset-0 bg-black flex items-center justify-center">
-        <video id="remote-video" autoplay playsinline></video>
-        <button id="play-btn" class="absolute bg-blue-600 px-8 py-3 rounded-full font-bold hidden" onclick="$('remote-video').play(); this.classList.add('hidden');">اضغط لعرض البث</button>
+        <video id="remote-video" autoplay playsinline muted></video>
+        <button id="play-btn" class="absolute bg-red-600 px-8 py-3 rounded-full font-bold hidden" onclick="$('remote-video').play(); this.classList.add('hidden');">اضغط هنا لفتح البث</button>
     </div>
 
     <script>
@@ -82,36 +96,33 @@
 
         async function setupTablet() {
             const sid = new URLSearchParams(window.location.search).get('sid');
-            if (!sid) return alert("يرجى مسح الكود من البي سي أولاً!");
+            if (!sid) return alert("يرجى مسح الكود أولاً!");
 
             $('selection-view').classList.add('hidden');
             $('tablet-view').classList.remove('hidden');
 
             $('start-screen-btn').onclick = async () => {
                 try {
-                    // طلب الشاشة فقط وبجودة عالية
+                    // إجبار المتصفح على طلب الشاشة بأقصى إعدادات
                     const screenStream = await navigator.mediaDevices.getDisplayMedia({
                         video: { 
                             displaySurface: "monitor",
-                            frameRate: { ideal: 60, max: 60 },
-                            width: { ideal: 1920 }
+                            frameRate: 60
                         },
                         audio: true
                     });
 
                     peer = new Peer();
                     peer.on('open', () => {
-                        peer.call(sid, screenStream);
-                        $('start-screen-btn').innerText = "البث شغال.. اذهب للعبة!";
-                        $('start-screen-btn').style.opacity = "0.5";
-                        $('start-screen-btn').disabled = true;
+                        const call = peer.call(sid, screenStream);
+                        $('start-screen-btn').innerText = "تم الاتصال! ادخل ببجي الآن";
+                        $('start-screen-btn').classList.replace('bg-red-600', 'bg-green-600');
                     });
 
-                    // إذا قمت بإيقاف البث من شريط الإشعارات
                     screenStream.getVideoTracks()[0].onended = () => location.reload();
 
                 } catch (e) {
-                    alert("المتصفح يرفض تصوير الشاشة. \n\nتأكد أنك فعلت 'موقع إصدار سطح المكتب' من الثلاث نقاط فوق.");
+                    alert("للأسف، تابلت لينوفو يرفض البث من المتصفح. \n\nالحل الوحيد المتبقي هو تحميل تطبيق 'Screen Stream over HTTP' من متجر Play.");
                 }
             };
         }
