@@ -23,6 +23,9 @@
         .preset-btn {
             @apply py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all active:scale-95;
         }
+        #miniPreview {
+            transition: filter 0.2s ease;
+        }
     </style>
 </head>
 <body class="bg-[#0a0a0c] text-white min-h-screen font-sans selection:bg-cyan-500 selection:text-black">
@@ -33,7 +36,7 @@
             <h1 class="text-5xl md:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
                 PUBG MOBILE ENHANCER
             </h1>
-            <p class="text-cyan-400 font-mono tracking-[0.3em] mt-2 uppercase text-sm">Multimedia Engineering Protocol v1.2</p>
+            <p class="text-cyan-400 font-mono tracking-[0.3em] mt-2 uppercase text-sm">Multimedia Engineering Protocol v1.4</p>
         </div>
 
         <!-- Editor Interface -->
@@ -51,10 +54,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                     </div>
-                    <p id="fileName" class="text-gray-400 font-medium italic text-lg">اضغط هنا لاختيار فيديو الببجي</p>
-                    <p class="text-gray-600 text-xs">يفضل أن يكون المقطع أقل من 30 ثانية لتجنب أخطاء الذاكرة</p>
+                    <p id="fileName" class="text-gray-400 font-medium italic text-lg text-center">اضغط هنا لاختيار فيديو الببجي</p>
+                    <p class="text-gray-600 text-xs text-center">يرجى الانتظار قليلاً بعد الضغط على حفظ</p>
                 </div>
-                <video id="miniPreview" class="hidden mx-auto h-40 rounded-lg border border-cyan-500/50 mt-2 shadow-lg" muted autoplay loop playsinline></video>
+                <div id="previewContainer" class="hidden relative group">
+                    <video id="miniPreview" class="mx-auto w-full max-h-[400px] rounded-lg border border-cyan-500/50 mt-2 shadow-lg object-contain bg-black" controls playsinline></video>
+                    <div class="absolute top-4 right-4 bg-black/60 px-3 py-1 rounded-full text-[10px] text-cyan-400 border border-cyan-500/30 uppercase font-bold">Live Preview / عرض مباشر</div>
+                </div>
             </div>
 
             <!-- Quick Presets -->
@@ -87,22 +93,22 @@
                 <div class="space-y-3">
                     <div class="flex justify-between text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                         <span>Brightness</span>
-                        <span id="brightVal" class="text-purple-500">0.02</span>
+                        <span id="brightVal" class="text-purple-500">1.0</span>
                     </div>
-                    <input type="range" id="brightness" min="-0.1" max="0.2" step="0.01" value="0.02" class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="brightness" min="0.5" max="1.5" step="0.01" value="1.0" class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer">
                 </div>
             </div>
 
             <!-- Execution -->
             <div class="flex flex-col items-center">
                 <button id="processBtn" class="w-full md:w-auto px-16 py-5 bg-gradient-to-r from-cyan-600 to-blue-700 rounded-full font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all text-lg border border-white/10">
-                    ابدأ التعديل الآن
+                    استخراج الفيديو النهائي
                 </button>
 
                 <!-- Status Panel -->
                 <div id="statusContainer" class="hidden w-full mt-8 space-y-3 bg-black/40 p-6 rounded-2xl border border-white/5">
                     <div class="flex justify-between text-[11px] font-mono text-cyan-400">
-                        <span id="statusText" class="animate-pulse tracking-widest">PROCESSING VIDEO CORE...</span>
+                        <span id="statusText" class="animate-pulse tracking-widest">ENCODING MULTIMEDIA...</span>
                         <span id="progressPercent">0%</span>
                     </div>
                     <div class="w-full bg-gray-900 rounded-full h-3 overflow-hidden p-[2px]">
@@ -112,11 +118,16 @@
 
                 <!-- Final Output -->
                 <div id="resultArea" class="hidden mt-10 w-full space-y-6">
-                    <div class="text-center text-green-400 font-bold text-sm uppercase tracking-widest animate-bounce">✨ التعديل جاهز! ✨</div>
+                    <div class="text-center text-green-400 font-bold text-sm uppercase tracking-widest animate-bounce">✨ الملف جاهز للحفظ ✨</div>
                     <video id="previewVideo" controls playsinline class="w-full rounded-xl border border-white/10 shadow-2xl bg-black"></video>
-                    <a id="downloadBtn" class="block w-full text-center py-6 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 shadow-xl cursor-pointer text-lg">
+                    
+                    <button id="realDownloadBtn" class="w-full py-6 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 shadow-xl cursor-pointer text-lg">
                         حفظ المقطع في الاستوديو
-                    </a>
+                    </button>
+                    
+                    <button onclick="window.location.reload()" class="w-full text-center text-gray-500 text-xs underline uppercase tracking-widest">
+                        تعديل مقطع آخر / Refresh
+                    </button>
                 </div>
             </div>
         </div>
@@ -124,11 +135,11 @@
 
     <script>
         const { createFFmpeg, fetchFile } = FFmpeg;
-        // Optimization: Set log to false to save some overhead in heavy processing
         const ffmpeg = createFFmpeg({ log: false });
 
         const videoInput = document.getElementById('videoInput');
         const dropZone = document.getElementById('dropZone');
+        const previewContainer = document.getElementById('previewContainer');
         const miniPreview = document.getElementById('miniPreview');
         const uploadUI = document.getElementById('uploadUI');
         const processBtn = document.getElementById('processBtn');
@@ -137,68 +148,61 @@
         const progressPercent = document.getElementById('progressPercent');
         const resultArea = document.getElementById('resultArea');
         const previewVideo = document.getElementById('previewVideo');
-        const downloadBtn = document.getElementById('downloadBtn');
+        const realDownloadBtn = document.getElementById('realDownloadBtn');
 
-        // UI Logic
-        dropZone.onclick = () => videoInput.click();
+        let lastGeneratedBlob = null;
+
+        dropZone.onclick = (e) => {
+            if (e.target !== miniPreview) videoInput.click();
+        };
 
         videoInput.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
                 const url = URL.createObjectURL(file);
                 miniPreview.src = url;
-                miniPreview.classList.remove('hidden');
+                previewContainer.classList.remove('hidden');
                 uploadUI.classList.add('hidden');
                 document.getElementById('fileName').innerText = "تم اختيار المقطع";
+                updateLiveFilters();
             }
         };
 
-        const sliderMap = {
-            'sharpness': 'sharpVal',
-            'saturation': 'satVal',
-            'brightness': 'brightVal'
-        };
+        function updateLiveFilters() {
+            const sharp = document.getElementById('sharpness').value;
+            const sat = document.getElementById('saturation').value;
+            const bright = document.getElementById('brightness').value;
+            const contrast = 1 + (sharp * 0.2); 
+            miniPreview.style.filter = `saturate(${sat}) brightness(${bright}) contrast(${contrast})`;
+        }
 
-        Object.keys(sliderMap).forEach(id => {
-            const el = document.getElementById(id);
-            const valDisplay = document.getElementById(sliderMap[id]);
-            if (el && valDisplay) {
-                el.oninput = () => {
-                    valDisplay.innerText = el.value;
-                };
-            }
+        ['sharpness', 'saturation', 'brightness'].forEach(id => {
+            document.getElementById(id).oninput = (e) => {
+                const valId = id === 'sharpness' ? 'sharpVal' : (id === 'saturation' ? 'satVal' : 'brightVal');
+                document.getElementById(valId).innerText = e.target.value;
+                updateLiveFilters();
+            };
         });
 
         function applyPreset(type) {
-            const s = document.getElementById('sharpness'), 
-                  sat = document.getElementById('saturation'), 
-                  b = document.getElementById('brightness');
-            
-            if(type === 'vibrant') { s.value = 1.2; sat.value = 2.0; b.value = 0.04; }
-            else if(type === 'sharp') { s.value = 2.5; sat.value = 1.4; b.value = 0.01; }
-            else if(type === 'cinematic') { s.value = 1.0; sat.value = 1.6; b.value = -0.05; }
-            else { s.value = 1.5; sat.value = 1.5; b.value = 0.02; }
-            
-            s.dispatchEvent(new Event('input'));
-            sat.dispatchEvent(new Event('input'));
-            b.dispatchEvent(new Event('input'));
+            const s = document.getElementById('sharpness'), sat = document.getElementById('saturation'), b = document.getElementById('brightness');
+            if(type === 'vibrant') { s.value = 1.2; sat.value = 2.0; b.value = 1.1; }
+            else if(type === 'sharp') { s.value = 2.5; sat.value = 1.4; b.value = 1.0; }
+            else if(type === 'cinematic') { s.value = 1.0; sat.value = 1.6; b.value = 0.9; }
+            else { s.value = 1.5; sat.value = 1.5; b.value = 1.0; }
+            [s, sat, b].forEach(el => el.dispatchEvent(new Event('input')));
         }
 
         processBtn.onclick = async () => {
             const file = videoInput.files[0];
-            if (!file) {
-                alert("يرجى اختيار مقطع فيديو أولاً!");
-                return;
-            }
+            if (!file) return;
 
             processBtn.disabled = true;
             statusContainer.classList.remove('hidden');
             resultArea.classList.add('hidden');
 
             try {
-                if (!ffmpeg.isLoaded()) {
-                    await ffmpeg.load();
-                }
+                if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
                 ffmpeg.setProgress(({ ratio }) => {
                     const p = Math.max(0, Math.min(100, Math.round(ratio * 100)));
@@ -208,46 +212,57 @@
 
                 const inputName = 'input.mp4';
                 const outputName = 'output.mp4';
-                
                 ffmpeg.FS('writeFile', inputName, await fetchFile(file));
 
                 const sharp = document.getElementById('sharpness').value;
                 const sat = document.getElementById('saturation').value;
-                const bright = document.getElementById('brightness').value;
+                const ffmpegBright = (parseFloat(document.getElementById('brightness').value) - 1.0);
                 
-                // Optimization: scale=-1:720 limits resolution to 720p to save memory
-                // preset=ultrafast speeds up the process and reduces time-based memory buildup
-                const filter = `scale=-1:720,unsharp=5:5:${sharp}:5:5:0,eq=saturation=${sat}:brightness=${bright}`;
+                const filter = `scale=-1:720,unsharp=5:5:${sharp}:5:5:0,eq=saturation=${sat}:brightness=${ffmpegBright}`;
 
-                await ffmpeg.run(
-                    '-i', inputName, 
-                    '-vf', filter, 
-                    '-preset', 'ultrafast', 
-                    '-c:a', 'copy', 
-                    outputName
-                );
+                await ffmpeg.run('-i', inputName, '-vf', filter, '-preset', 'ultrafast', '-c:a', 'copy', outputName);
 
                 const data = ffmpeg.FS('readFile', outputName);
-                const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+                lastGeneratedBlob = new Blob([data.buffer], { type: 'video/mp4' });
+                const url = URL.createObjectURL(lastGeneratedBlob);
 
                 previewVideo.src = url;
-                downloadBtn.href = url;
-                downloadBtn.download = `PUBG_Pro_Edit_${Date.now()}.mp4`;
-                
                 resultArea.classList.remove('hidden');
                 statusContainer.classList.add('hidden');
                 processBtn.disabled = false;
 
-                // Cleanup FS to free memory
                 ffmpeg.FS('unlink', inputName);
                 ffmpeg.FS('unlink', outputName);
 
             } catch (error) {
                 console.error(error);
-                alert("خطأ في الذاكرة: المتصفح لا يتحمل حجم هذا الملف. حاول استخدام مقطع أقصر (مثلاً 15 ثانية) أو قلل دقة الفيديو قبل رفعه.");
+                alert("حدث خطأ. حاول استخدام مقطع أقصر.");
                 processBtn.disabled = false;
-                statusContainer.classList.add('hidden');
             }
+        };
+
+        // NEW FORCE SAVE METHOD
+        realDownloadBtn.onclick = () => {
+            if (!lastGeneratedBlob) return;
+            
+            const fileName = `PUBG_Edit_${Date.now()}.mp4`;
+            
+            // Method 1: standard link (fallback)
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            const url = URL.createObjectURL(lastGeneratedBlob);
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            
+            // For iOS/iPadOS Safari: Open in new tab if direct download fails
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            
+            alert("بدأ التحميل! إذا لم يتم الحفظ تلقائياً، اضغط مطولاً على الفيديو واختر 'حفظ الفيديو'.");
         };
     </script>
 </body>
