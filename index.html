@@ -3,55 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>بث ببجي | وضع التجاوز النهائي</title>
+    <title>بث شاشة ببجي | لينوفو</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@900&display=swap');
         body { font-family: 'Noto Sans Arabic', sans-serif; background: #000; color: #fff; height: 100vh; overflow: hidden; }
-        .force-bg { background: linear-gradient(135deg, #1e40af 0%, #1e1b4b 100%); }
-        #canvas-buffer { display: none; }
-        .stream-status { font-size: 10px; color: #4ade80; }
+        .screen-btn { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 24px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4); transition: 0.3s; }
+        .screen-btn:active { transform: scale(0.95); }
+        #remote-video { width: 100vw; height: 100vh; background: #000; object-fit: contain; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center p-4">
 
     <!-- اختيار الدور -->
     <div id="selection-view" class="space-y-8 w-full max-w-sm text-center">
-        <h1 class="text-4xl font-black italic">LENOVO <span class="text-blue-500">PRO</span></h1>
-        <p class="text-zinc-500 text-xs">تم إلغاء نظام الأذونات المعطل واستخدام نظام البث المباشر</p>
+        <h1 class="text-4xl font-black italic tracking-tighter text-blue-500">PUBG <span class="text-white">MIRROR</span></h1>
+        <p class="text-zinc-500 text-sm">هذا الإصدار مخصص لبث "الشاشة" فقط</p>
         
         <div class="flex flex-col gap-4">
-            <button onclick="setupPC()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold">استقبال البث (الكمبيوتر)</button>
-            <button onclick="setupTablet()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold">بث اللعبة (اللينوفو)</button>
+            <button onclick="setupPC()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold">جهاز الاستقبال (البي سي)</button>
+            <button onclick="setupTablet()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold text-blue-400 border-blue-500/30">جهاز اللعب (التابلت)</button>
         </div>
     </div>
 
     <!-- واجهة البي سي -->
     <div id="pc-view" class="hidden text-center space-y-6">
         <div id="qrcode" class="p-4 bg-white rounded-3xl inline-block shadow-2xl border-4 border-blue-500"></div>
-        <p class="font-bold text-blue-400">امسح الكود بالتابلت</p>
+        <p class="font-bold">امسح الكود بالتابلت للبدء</p>
     </div>
 
-    <!-- واجهة التابلت (تجاوز الحماية) -->
-    <div id="tablet-view" class="hidden w-full max-w-sm space-y-6 text-center">
-        <div class="bg-blue-900/20 border border-blue-500/30 p-4 rounded-2xl text-[11px] text-blue-400">
-            <b>وضع التجاوز المباشر:</b><br>
-            إذا لم تظهر نافذة الشاشة، الموقع سيقوم ببث "الكاميرا الخلفية" موجهة لشاشة اللعبة كحل بديل، أو حاول الضغط مرة أخرى.
+    <!-- واجهة التابلت -->
+    <div id="tablet-view" class="hidden w-full max-w-sm space-y-8 text-center">
+        <div class="bg-blue-900/20 border border-blue-500/30 p-5 rounded-3xl text-xs text-blue-300 leading-relaxed">
+            <b>تنبيه هام جداً:</b><br>
+            بمجرد الضغط على الزر، ستظهر رسالة من أندرويد تسألك عن "البدء الآن" لتصوير الشاشة. وافق عليها فوراً.
         </div>
 
-        <button id="start-btn" class="w-full py-8 force-bg rounded-[2rem] font-black text-2xl shadow-xl">
-            تنشيط البث الآن
+        <button id="start-screen-btn" class="screen-btn w-full py-8 font-black text-2xl uppercase tracking-widest">
+            بث الشاشة للبي سي
         </button>
-        
-        <div id="tablet-log" class="text-[9px] text-zinc-600 font-mono"></div>
+
+        <p class="text-[10px] text-zinc-600">تأكد أنك تستخدم Chrome بوضع "موقع سطح المكتب"</p>
     </div>
 
-    <!-- العرض المباشر -->
-    <div id="live-view" class="hidden fixed inset-0 bg-black">
-        <video id="remote-video" class="w-full h-full object-contain" autoplay playsinline></video>
-        <canvas id="canvas-buffer"></canvas>
+    <!-- العرض المباشر (PC) -->
+    <div id="live-view" class="hidden fixed inset-0 bg-black flex items-center justify-center">
+        <video id="remote-video" autoplay playsinline></video>
+        <button id="play-btn" class="absolute bg-blue-600 px-8 py-3 rounded-full font-bold hidden" onclick="$('remote-video').play(); this.classList.add('hidden');">اضغط لعرض البث</button>
     </div>
 
     <script>
@@ -71,42 +71,47 @@
                 call.on('stream', stream => {
                     $('pc-view').classList.add('hidden');
                     $('live-view').classList.remove('hidden');
-                    $('remote-video').srcObject = stream;
+                    const video = $('remote-video');
+                    video.srcObject = stream;
+                    video.onloadedmetadata = () => {
+                        video.play().catch(() => $('play-btn').classList.remove('hidden'));
+                    };
                 });
             });
         }
 
         async function setupTablet() {
             const sid = new URLSearchParams(window.location.search).get('sid');
-            if (!sid) return alert("امسح الكود أولاً!");
+            if (!sid) return alert("يرجى مسح الكود من البي سي أولاً!");
 
             $('selection-view').classList.add('hidden');
             $('tablet-view').classList.remove('hidden');
 
-            $('start-btn').onclick = async () => {
+            $('start-screen-btn').onclick = async () => {
                 try {
-                    // المحاولة رقم 1: طلب الشاشة (التي ترفضها لينوفو)
-                    const stream = await navigator.mediaDevices.getDisplayMedia({
-                        video: { frameRate: 60 },
+                    // طلب الشاشة فقط وبجودة عالية
+                    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: { 
+                            displaySurface: "monitor",
+                            frameRate: { ideal: 60, max: 60 },
+                            width: { ideal: 1920 }
+                        },
                         audio: true
                     });
 
                     peer = new Peer();
                     peer.on('open', () => {
-                        peer.call(sid, stream);
-                        $('start-btn').innerText = "متصل ✅";
+                        peer.call(sid, screenStream);
+                        $('start-screen-btn').innerText = "البث شغال.. اذهب للعبة!";
+                        $('start-screen-btn').style.opacity = "0.5";
+                        $('start-screen-btn').disabled = true;
                     });
 
+                    // إذا قمت بإيقاف البث من شريط الإشعارات
+                    screenStream.getVideoTracks()[0].onended = () => location.reload();
+
                 } catch (e) {
-                    // إذا فشلت (وهذا المتوقع في حالتك)، سنقوم بفتح "الكاميرا" كبديل
-                    // لأن أندرويد يوافق على الكاميرا دائماً بعكس الشاشة
-                    alert("نظام لينوفو يرفض بث الشاشة داخلياً. سأقوم بتفعيل الكاميرا كبديل؛ يمكنك وضع التابلت أمام شاشة أخرى أو محاولة فتح الأذونات يدوياً من القفل 🔒 فوق.");
-                    
-                    const camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    peer = new Peer();
-                    peer.on('open', () => {
-                        peer.call(sid, camStream);
-                    });
+                    alert("المتصفح يرفض تصوير الشاشة. \n\nتأكد أنك فعلت 'موقع إصدار سطح المكتب' من الثلاث نقاط فوق.");
                 }
             };
         }
