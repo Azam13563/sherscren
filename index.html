@@ -29,27 +29,28 @@
             <div class="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 blur-[100px] rounded-full"></div>
             <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-red-500/10 blur-[100px] rounded-full"></div>
 
-            <!-- Upload Area -->
-            <div id="dropZone" class="relative group cursor-pointer border-2 border-dashed border-gray-700 hover:border-cyan-500/50 rounded-2xl p-12 text-center transition-all bg-black/20 mb-8">
+            <!-- Upload Area (Optimized for Tablets) -->
+            <div id="dropZone" class="relative group cursor-pointer border-2 border-dashed border-gray-700 hover:border-cyan-500/50 rounded-2xl p-12 text-center transition-all bg-black/20 mb-8 active:scale-[0.98] touch-none">
                 <input type="file" id="videoInput" accept="video/*" class="hidden">
-                <div class="space-y-4">
+                <div class="space-y-4 pointer-events-none">
                     <div class="mx-auto w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                     </div>
-                    <p id="fileName" class="text-gray-400 font-medium italic">Drop your raw PUBG clip here (MP4/MOV)</p>
+                    <p id="fileName" class="text-gray-400 font-medium italic">Tap to select or drop PUBG clip</p>
+                    <p class="text-[10px] text-gray-600 uppercase tracking-widest">(Supports MP4, MOV, MKV)</p>
                 </div>
             </div>
 
-            <!-- Quick Presets (The requested templates) -->
+            <!-- Quick Presets -->
             <div class="mb-10">
                 <h3 class="text-[10px] uppercase tracking-[0.3em] text-gray-500 font-bold mb-4 text-center">Ready Presets / قوالب جاهزة</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <button onclick="applyPreset('vibrant')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all">Vibrant Erangel</button>
-                    <button onclick="applyPreset('sharp')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all">Ultra Sharp</button>
-                    <button onclick="applyPreset('cinematic')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-purple-500/20 hover:border-purple-500/50 transition-all">Cinematic Night</button>
-                    <button onclick="applyPreset('original')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-red-500/20 hover:border-red-500/50 transition-all">Reset Original</button>
+                    <button onclick="applyPreset('vibrant')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all active:bg-yellow-500/40">Vibrant Erangel</button>
+                    <button onclick="applyPreset('sharp')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all active:bg-cyan-500/40">Ultra Sharp</button>
+                    <button onclick="applyPreset('cinematic')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-purple-500/20 hover:border-purple-500/50 transition-all active:bg-purple-500/40">Cinematic Night</button>
+                    <button onclick="applyPreset('original')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-red-500/20 hover:border-red-500/50 transition-all active:bg-red-500/40">Reset Original</button>
                 </div>
             </div>
 
@@ -60,21 +61,21 @@
                         <span>Sharpness</span>
                         <span id="sharpVal" class="text-cyan-400">1.5</span>
                     </div>
-                    <input type="range" id="sharpness" min="0" max="3" step="0.1" value="1.5" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                    <input type="range" id="sharpness" min="0" max="3" step="0.1" value="1.5" class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
                 </div>
                 <div class="space-y-3">
                     <div class="flex justify-between text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                         <span>Saturation</span>
                         <span id="satVal" class="text-yellow-500">1.5</span>
                     </div>
-                    <input type="range" id="saturation" min="0" max="3" step="0.1" value="1.5" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                    <input type="range" id="saturation" min="0" max="3" step="0.1" value="1.5" class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
                 </div>
                 <div class="space-y-3">
                     <div class="flex justify-between text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                         <span>Brightness</span>
                         <span id="brightVal" class="text-purple-500">0.02</span>
                     </div>
-                    <input type="range" id="brightness" min="-0.1" max="0.2" step="0.01" value="0.02" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                    <input type="range" id="brightness" min="-0.1" max="0.2" step="0.01" value="0.02" class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-purple-500">
                 </div>
             </div>
 
@@ -97,8 +98,8 @@
 
                 <!-- Preview & Download -->
                 <div id="resultArea" class="hidden mt-10 w-full space-y-6">
-                    <video id="previewVideo" controls class="w-full rounded-xl border border-white/10 shadow-2xl"></video>
-                    <button id="downloadBtn" class="w-full py-4 bg-green-600/20 border border-green-500/50 text-green-400 rounded-xl font-bold uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all">
+                    <video id="previewVideo" controls playsinline class="w-full rounded-xl border border-white/10 shadow-2xl"></video>
+                    <button id="downloadBtn" class="w-full py-4 bg-green-600/20 border border-green-500/50 text-green-400 rounded-xl font-bold uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all active:scale-[0.98]">
                         Download & Save to Photos
                     </button>
                 </div>
@@ -110,8 +111,16 @@
         </footer>
     </div>
 
-    <!-- Logic for Presets -->
+    <!-- Logic for Presets and UI -->
     <script>
+        // Optimization for Tablet Touch
+        const dropZone = document.getElementById('dropZone');
+        const videoInput = document.getElementById('videoInput');
+
+        dropZone.addEventListener('click', (e) => {
+            videoInput.click();
+        });
+
         function applyPreset(type) {
             const sliders = {
                 sharp: document.getElementById('sharpness'),
