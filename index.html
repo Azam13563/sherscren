@@ -1,135 +1,154 @@
 <!DOCTYPE html>
-<html lang="ar" dir="ltr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>بث شاشة ببجي | لينوفو</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBG Elite Montage Editor</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@900&display=swap');
-        body { font-family: 'Noto Sans Arabic', sans-serif; background: #000; color: #fff; height: 100vh; overflow: hidden; }
-        .screen-btn { 
-            background: #ef4444; 
-            border-radius: 24px; 
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.5); 
-            transition: 0.3s;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
-            50% { transform: scale(1.02); box-shadow: 0 0 40px rgba(239, 68, 68, 0.7); }
-            100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
-        }
-        #remote-video { width: 100vw; height: 100vh; background: #000; object-fit: contain; }
-    </style>
+    <!-- FFmpeg.wasm -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <!-- COI Service Worker for SharedArrayBuffer on GitHub Pages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/coi-serviceworker/0.1.7/coi-serviceworker.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="flex flex-col items-center justify-center p-4">
+<body class="bg-[#0a0a0c] text-white min-h-screen font-sans selection:bg-cyan-500 selection:text-black">
 
-    <!-- اختيار الدور -->
-    <div id="selection-view" class="space-y-8 w-full max-w-sm text-center">
-        <h1 class="text-4xl font-black italic tracking-tighter text-red-500">PUBG <span class="text-white">ULTIMATE</span></h1>
-        <p class="text-zinc-500 text-sm">محاولة أخيرة لتجاوز قيود نظام لينوفو</p>
-        
-        <div class="flex flex-col gap-4">
-            <button onclick="setupPC()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold">جهاز الاستقبال (البي سي)</button>
-            <button onclick="setupTablet()" class="bg-zinc-900 p-6 rounded-3xl border border-zinc-700 font-bold text-red-400 border-red-500/30">جهاز اللعب (التابلت)</button>
-        </div>
-    </div>
-
-    <!-- واجهة البي سي -->
-    <div id="pc-view" class="hidden text-center space-y-6">
-        <div id="qrcode" class="p-4 bg-white rounded-3xl inline-block shadow-2xl border-4 border-red-500"></div>
-        <p class="font-bold text-red-500">امسح الكود بالتابلت الآن</p>
-    </div>
-
-    <!-- واجهة التابلت -->
-    <div id="tablet-view" class="hidden w-full max-w-sm space-y-8 text-center">
-        <div class="bg-red-900/20 border border-red-500/30 p-5 rounded-3xl text-xs text-red-300 leading-relaxed">
-            <b>تحذير التجاوز:</b><br>
-            إذا ضغطت الزر ولم تظهر نافذة "البدء الآن"، فجهازك يمنع المتصفحات تماماً من البث. تأكد من إغلاق أي تطبيقات أخرى تسجل الشاشة.
+    <div class="container mx-auto px-4 py-10 flex flex-col items-center">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                PUBG MOBILE ENHANCER
+            </h1>
+            <p class="text-cyan-400 font-mono tracking-[0.3em] mt-2 uppercase text-sm">Multimedia Engineering Protocol v1.0</p>
         </div>
 
-        <button id="start-screen-btn" class="screen-btn w-full py-8 font-black text-2xl uppercase tracking-widest">
-            تنشيط البث الإجباري
-        </button>
+        <!-- Editor Interface -->
+        <div class="w-full max-w-4xl bg-[#121216] border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden group">
+            <!-- Decorative Glow -->
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 blur-[100px] rounded-full"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-red-500/10 blur-[100px] rounded-full"></div>
 
-        <div class="space-y-2 text-[10px] text-zinc-600">
-            <p>1. افتح الرابط في Google Chrome حصراً</p>
-            <p>2. فعل "Desktop Site" من النقاط الثلاث</p>
-            <p>3. تأكد من إلغاء "وضع توفير الطاقة"</p>
+            <!-- Upload Area -->
+            <div id="dropZone" class="relative group cursor-pointer border-2 border-dashed border-gray-700 hover:border-cyan-500/50 rounded-2xl p-12 text-center transition-all bg-black/20 mb-8">
+                <input type="file" id="videoInput" accept="video/*" class="hidden">
+                <div class="space-y-4">
+                    <div class="mx-auto w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
+                    <p id="fileName" class="text-gray-400 font-medium italic">Drop your raw PUBG clip here (MP4/MOV)</p>
+                </div>
+            </div>
+
+            <!-- Quick Presets (The requested templates) -->
+            <div class="mb-10">
+                <h3 class="text-[10px] uppercase tracking-[0.3em] text-gray-500 font-bold mb-4 text-center">Ready Presets / قوالب جاهزة</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button onclick="applyPreset('vibrant')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all">Vibrant Erangel</button>
+                    <button onclick="applyPreset('sharp')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all">Ultra Sharp</button>
+                    <button onclick="applyPreset('cinematic')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-purple-500/20 hover:border-purple-500/50 transition-all">Cinematic Night</button>
+                    <button onclick="applyPreset('original')" class="py-3 px-2 bg-gray-800/50 border border-white/5 rounded-xl text-[11px] font-bold uppercase hover:bg-red-500/20 hover:border-red-500/50 transition-all">Reset Original</button>
+                </div>
+            </div>
+
+            <!-- Professional Sliders -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+                <div class="space-y-3">
+                    <div class="flex justify-between text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                        <span>Sharpness</span>
+                        <span id="sharpVal" class="text-cyan-400">1.5</span>
+                    </div>
+                    <input type="range" id="sharpness" min="0" max="3" step="0.1" value="1.5" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                        <span>Saturation</span>
+                        <span id="satVal" class="text-yellow-500">1.5</span>
+                    </div>
+                    <input type="range" id="saturation" min="0" max="3" step="0.1" value="1.5" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                        <span>Brightness</span>
+                        <span id="brightVal" class="text-purple-500">0.02</span>
+                    </div>
+                    <input type="range" id="brightness" min="-0.1" max="0.2" step="0.01" value="0.02" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                </div>
+            </div>
+
+            <!-- Action Section -->
+            <div class="flex flex-col items-center">
+                <button id="processBtn" class="px-12 py-5 bg-gradient-to-r from-cyan-600 to-blue-700 rounded-full font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_50px_rgba(6,182,212,0.6)] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    Apply Professional Grade
+                </button>
+
+                <!-- Progress Tracker -->
+                <div id="statusContainer" class="hidden w-full mt-8 space-y-2">
+                    <div class="flex justify-between text-[10px] font-mono text-cyan-400">
+                        <span id="statusText">INITIALIZING FFMPEG CORE...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-900 rounded-full h-2 border border-white/5">
+                        <div id="progressBar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Preview & Download -->
+                <div id="resultArea" class="hidden mt-10 w-full space-y-6">
+                    <video id="previewVideo" controls class="w-full rounded-xl border border-white/10 shadow-2xl"></video>
+                    <button id="downloadBtn" class="w-full py-4 bg-green-600/20 border border-green-500/50 text-green-400 rounded-xl font-bold uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all">
+                        Download & Save to Photos
+                    </button>
+                </div>
+            </div>
         </div>
+
+        <footer class="mt-12 text-gray-600 text-[10px] font-mono uppercase tracking-widest">
+            Developed for Professional Esports Montages
+        </footer>
     </div>
 
-    <!-- العرض المباشر (PC) -->
-    <div id="live-view" class="hidden fixed inset-0 bg-black flex items-center justify-center">
-        <video id="remote-video" autoplay playsinline muted></video>
-        <button id="play-btn" class="absolute bg-red-600 px-8 py-3 rounded-full font-bold hidden" onclick="$('remote-video').play(); this.classList.add('hidden');">اضغط هنا لفتح البث</button>
-    </div>
-
+    <!-- Logic for Presets -->
     <script>
-        let peer;
-        const $ = id => document.getElementById(id);
-
-        function setupPC() {
-            $('selection-view').classList.add('hidden');
-            $('pc-view').classList.remove('hidden');
-            peer = new Peer();
-            peer.on('open', id => {
-                const url = window.location.href.split('?')[0] + "?sid=" + id;
-                new QRCode($("qrcode"), { text: url, width: 220, height: 220 });
-            });
-            peer.on('call', call => {
-                call.answer();
-                call.on('stream', stream => {
-                    $('pc-view').classList.add('hidden');
-                    $('live-view').classList.remove('hidden');
-                    const video = $('remote-video');
-                    video.srcObject = stream;
-                    video.onloadedmetadata = () => {
-                        video.play().catch(() => $('play-btn').classList.remove('hidden'));
-                    };
-                });
-            });
-        }
-
-        async function setupTablet() {
-            const sid = new URLSearchParams(window.location.search).get('sid');
-            if (!sid) return alert("يرجى مسح الكود أولاً!");
-
-            $('selection-view').classList.add('hidden');
-            $('tablet-view').classList.remove('hidden');
-
-            $('start-screen-btn').onclick = async () => {
-                try {
-                    // إجبار المتصفح على طلب الشاشة بأقصى إعدادات
-                    const screenStream = await navigator.mediaDevices.getDisplayMedia({
-                        video: { 
-                            displaySurface: "monitor",
-                            frameRate: 60
-                        },
-                        audio: true
-                    });
-
-                    peer = new Peer();
-                    peer.on('open', () => {
-                        const call = peer.call(sid, screenStream);
-                        $('start-screen-btn').innerText = "تم الاتصال! ادخل ببجي الآن";
-                        $('start-screen-btn').classList.replace('bg-red-600', 'bg-green-600');
-                    });
-
-                    screenStream.getVideoTracks()[0].onended = () => location.reload();
-
-                } catch (e) {
-                    alert("للأسف، تابلت لينوفو يرفض البث من المتصفح. \n\nالحل الوحيد المتبقي هو تحميل تطبيق 'Screen Stream over HTTP' من متجر Play.");
-                }
+        function applyPreset(type) {
+            const sliders = {
+                sharp: document.getElementById('sharpness'),
+                sat: document.getElementById('saturation'),
+                bright: document.getElementById('brightness')
             };
-        }
 
-        window.onload = () => {
-            if (window.location.search.includes('sid')) setupTablet();
-        };
+            const displays = {
+                sharp: document.getElementById('sharpVal'),
+                sat: document.getElementById('satVal'),
+                bright: document.getElementById('brightVal')
+            };
+
+            if (type === 'vibrant') {
+                sliders.sharp.value = 1.2;
+                sliders.sat.value = 2.0;
+                sliders.bright.value = 0.04;
+            } else if (type === 'sharp') {
+                sliders.sharp.value = 2.5;
+                sliders.sat.value = 1.4;
+                sliders.bright.value = 0.01;
+            } else if (type === 'cinematic') {
+                sliders.sharp.value = 1.0;
+                sliders.sat.value = 1.6;
+                sliders.bright.value = -0.05;
+            } else if (type === 'original') {
+                sliders.sharp.value = 0.0;
+                sliders.sat.value = 1.0;
+                sliders.bright.value = 0.0;
+            }
+
+            // Sync displays
+            displays.sharp.innerText = sliders.sharp.value;
+            displays.sat.innerText = sliders.sat.value;
+            displays.bright.innerText = sliders.bright.value;
+        }
     </script>
+    <script src="script.js"></script>
 </body>
 </html>
