@@ -33,7 +33,7 @@
             <h1 class="text-5xl md:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
                 PUBG MOBILE ENHANCER
             </h1>
-            <p class="text-cyan-400 font-mono tracking-[0.3em] mt-2 uppercase text-sm">Multimedia Engineering Protocol v1.1</p>
+            <p class="text-cyan-400 font-mono tracking-[0.3em] mt-2 uppercase text-sm">Multimedia Engineering Protocol v1.2</p>
         </div>
 
         <!-- Editor Interface -->
@@ -52,7 +52,7 @@
                         </svg>
                     </div>
                     <p id="fileName" class="text-gray-400 font-medium italic text-lg">اضغط هنا لاختيار فيديو الببجي</p>
-                    <p class="text-gray-600 text-xs">يدعم MP4, MOV, MKV</p>
+                    <p class="text-gray-600 text-xs">يفضل أن يكون المقطع أقل من 30 ثانية لتجنب أخطاء الذاكرة</p>
                 </div>
                 <video id="miniPreview" class="hidden mx-auto h-40 rounded-lg border border-cyan-500/50 mt-2 shadow-lg" muted autoplay loop playsinline></video>
             </div>
@@ -124,7 +124,8 @@
 
     <script>
         const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({ log: true });
+        // Optimization: Set log to false to save some overhead in heavy processing
+        const ffmpeg = createFFmpeg({ log: false });
 
         const videoInput = document.getElementById('videoInput');
         const dropZone = document.getElementById('dropZone');
@@ -152,7 +153,6 @@
             }
         };
 
-        // Correct ID mapping to avoid InnerText error
         const sliderMap = {
             'sharpness': 'sharpVal',
             'saturation': 'satVal',
@@ -179,13 +179,11 @@
             else if(type === 'cinematic') { s.value = 1.0; sat.value = 1.6; b.value = -0.05; }
             else { s.value = 1.5; sat.value = 1.5; b.value = 0.02; }
             
-            // Trigger the oninput events manually to update text displays
             s.dispatchEvent(new Event('input'));
             sat.dispatchEvent(new Event('input'));
             b.dispatchEvent(new Event('input'));
         }
 
-        // FFmpeg Core Processing
         processBtn.onclick = async () => {
             const file = videoInput.files[0];
             if (!file) {
@@ -208,8 +206,8 @@
                     progressPercent.innerText = p + '%';
                 });
 
-                const inputName = 'input_pubg.mp4';
-                const outputName = 'output_pro.mp4';
+                const inputName = 'input.mp4';
+                const outputName = 'output.mp4';
                 
                 ffmpeg.FS('writeFile', inputName, await fetchFile(file));
 
@@ -217,10 +215,17 @@
                 const sat = document.getElementById('saturation').value;
                 const bright = document.getElementById('brightness').value;
                 
-                // Advanced FFmpeg Chain
-                const filter = `unsharp=5:5:${sharp}:5:5:0,eq=saturation=${sat}:brightness=${bright}`;
+                // Optimization: scale=-1:720 limits resolution to 720p to save memory
+                // preset=ultrafast speeds up the process and reduces time-based memory buildup
+                const filter = `scale=-1:720,unsharp=5:5:${sharp}:5:5:0,eq=saturation=${sat}:brightness=${bright}`;
 
-                await ffmpeg.run('-i', inputName, '-vf', filter, '-c:a', 'copy', outputName);
+                await ffmpeg.run(
+                    '-i', inputName, 
+                    '-vf', filter, 
+                    '-preset', 'ultrafast', 
+                    '-c:a', 'copy', 
+                    outputName
+                );
 
                 const data = ffmpeg.FS('readFile', outputName);
                 const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
@@ -233,9 +238,13 @@
                 statusContainer.classList.add('hidden');
                 processBtn.disabled = false;
 
+                // Cleanup FS to free memory
+                ffmpeg.FS('unlink', inputName);
+                ffmpeg.FS('unlink', outputName);
+
             } catch (error) {
                 console.error(error);
-                alert("حدث خطأ في الذاكرة أو المعالجة. يرجى محاولة استخدام مقطع أصغر حجماً.");
+                alert("خطأ في الذاكرة: المتصفح لا يتحمل حجم هذا الملف. حاول استخدام مقطع أقصر (مثلاً 15 ثانية) أو قلل دقة الفيديو قبل رفعه.");
                 processBtn.disabled = false;
                 statusContainer.classList.add('hidden');
             }
