@@ -36,7 +36,7 @@
             <h1 class="text-5xl md:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
                 PUBG MOBILE ENHANCER
             </h1>
-            <p class="text-cyan-400 font-mono tracking-[0.3em] mt-2 uppercase text-sm">Multimedia Engineering Protocol v1.4</p>
+            <p class="text-cyan-400 font-mono tracking-[0.3em] mt-2 uppercase text-sm">Multimedia Engineering Protocol v1.5 [STABLE]</p>
         </div>
 
         <!-- Editor Interface -->
@@ -55,7 +55,7 @@
                         </svg>
                     </div>
                     <p id="fileName" class="text-gray-400 font-medium italic text-lg text-center">اضغط هنا لاختيار فيديو الببجي</p>
-                    <p class="text-gray-600 text-xs text-center">يرجى الانتظار قليلاً بعد الضغط على حفظ</p>
+                    <p class="text-red-500/80 text-xs text-center font-bold italic">تنبيه: ميزة الضغط التلقائي مفعلة لتجنب تعليق الحفظ</p>
                 </div>
                 <div id="previewContainer" class="hidden relative group">
                     <video id="miniPreview" class="mx-auto w-full max-h-[400px] rounded-lg border border-cyan-500/50 mt-2 shadow-lg object-contain bg-black" controls playsinline></video>
@@ -108,7 +108,7 @@
                 <!-- Status Panel -->
                 <div id="statusContainer" class="hidden w-full mt-8 space-y-3 bg-black/40 p-6 rounded-2xl border border-white/5">
                     <div class="flex justify-between text-[11px] font-mono text-cyan-400">
-                        <span id="statusText" class="animate-pulse tracking-widest">ENCODING MULTIMEDIA...</span>
+                        <span id="statusText" class="animate-pulse tracking-widest">STABILIZING MULTIMEDIA...</span>
                         <span id="progressPercent">0%</span>
                     </div>
                     <div class="w-full bg-gray-900 rounded-full h-3 overflow-hidden p-[2px]">
@@ -117,16 +117,20 @@
                 </div>
 
                 <!-- Final Output -->
-                <div id="resultArea" class="hidden mt-10 w-full space-y-6">
-                    <div class="text-center text-green-400 font-bold text-sm uppercase tracking-widest animate-bounce">✨ الملف جاهز للحفظ ✨</div>
-                    <video id="previewVideo" controls playsinline class="w-full rounded-xl border border-white/10 shadow-2xl bg-black"></video>
+                <div id="resultArea" class="hidden mt-10 w-full space-y-6 text-center">
+                    <div class="text-center text-green-400 font-bold text-sm uppercase tracking-widest animate-bounce">✅ اكتملت المعالجة بنجاح ✅</div>
+                    
+                    <!-- Full Controls for Manual Save -->
+                    <video id="previewVideo" controls playsinline preload="auto" class="w-full rounded-xl border border-white/10 shadow-2xl bg-black"></video>
                     
                     <button id="realDownloadBtn" class="w-full py-6 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 shadow-xl cursor-pointer text-lg">
-                        حفظ المقطع في الاستوديو
+                        تنزيل الفيديو الآن
                     </button>
                     
-                    <button onclick="window.location.reload()" class="w-full text-center text-gray-500 text-xs underline uppercase tracking-widest">
-                        تعديل مقطع آخر / Refresh
+                    <p class="text-gray-500 text-[10px] italic">ملاحظة: إذا لم يبدأ التحميل، اضغط مطولاً على الفيديو واختر "حفظ".</p>
+
+                    <button onclick="window.location.reload()" class="w-full mt-4 text-center text-gray-600 text-[10px] underline uppercase tracking-widest">
+                        Refresh Page / البدء من جديد
                     </button>
                 </div>
             </div>
@@ -150,7 +154,7 @@
         const previewVideo = document.getElementById('previewVideo');
         const realDownloadBtn = document.getElementById('realDownloadBtn');
 
-        let lastGeneratedBlob = null;
+        let lastGeneratedBlobUrl = null;
 
         dropZone.onclick = (e) => {
             if (e.target !== miniPreview) videoInput.click();
@@ -218,51 +222,58 @@
                 const sat = document.getElementById('saturation').value;
                 const ffmpegBright = (parseFloat(document.getElementById('brightness').value) - 1.0);
                 
+                // STABILIZATION PARAMETERS:
+                // -crf 28: Good balance between quality and small file size (crucial for saving)
+                // -preset faster: To avoid memory leak during long processing
                 const filter = `scale=-1:720,unsharp=5:5:${sharp}:5:5:0,eq=saturation=${sat}:brightness=${ffmpegBright}`;
 
-                await ffmpeg.run('-i', inputName, '-vf', filter, '-preset', 'ultrafast', '-c:a', 'copy', outputName);
+                await ffmpeg.run(
+                    '-i', inputName, 
+                    '-vf', filter, 
+                    '-c:v', 'libx264',
+                    '-crf', '28',
+                    '-preset', 'faster',
+                    '-c:a', 'copy', 
+                    outputName
+                );
 
                 const data = ffmpeg.FS('readFile', outputName);
-                lastGeneratedBlob = new Blob([data.buffer], { type: 'video/mp4' });
-                const url = URL.createObjectURL(lastGeneratedBlob);
+                const blob = new Blob([data.buffer], { type: 'video/mp4' });
+                
+                if (lastGeneratedBlobUrl) URL.revokeObjectURL(lastGeneratedBlobUrl);
+                lastGeneratedBlobUrl = URL.createObjectURL(blob);
 
-                previewVideo.src = url;
+                previewVideo.src = lastGeneratedBlobUrl;
                 resultArea.classList.remove('hidden');
                 statusContainer.classList.add('hidden');
                 processBtn.disabled = false;
 
+                // Cleanup immediately
                 ffmpeg.FS('unlink', inputName);
                 ffmpeg.FS('unlink', outputName);
 
             } catch (error) {
                 console.error(error);
-                alert("حدث خطأ. حاول استخدام مقطع أقصر.");
+                alert("تعذر الحفظ بسبب نقص الذاكرة. جرب استخدام مقطع أقل من 15 ثانية أو أغلق التطبيقات الأخرى في الخلفية.");
                 processBtn.disabled = false;
+                statusContainer.classList.add('hidden');
             }
         };
 
-        // NEW FORCE SAVE METHOD
         realDownloadBtn.onclick = () => {
-            if (!lastGeneratedBlob) return;
+            if (!lastGeneratedBlobUrl) return;
             
-            const fileName = `PUBG_Edit_${Date.now()}.mp4`;
-            
-            // Method 1: standard link (fallback)
             const a = document.createElement('a');
-            a.style.display = 'none';
-            const url = URL.createObjectURL(lastGeneratedBlob);
-            a.href = url;
-            a.download = fileName;
+            a.href = lastGeneratedBlobUrl;
+            a.download = `PUBG_Elite_Edit_${Date.now()}.mp4`;
             document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             
-            // For iOS/iPadOS Safari: Open in new tab if direct download fails
+            // Show secondary instructions if download doesn't trigger
             setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-            
-            alert("بدأ التحميل! إذا لم يتم الحفظ تلقائياً، اضغط مطولاً على الفيديو واختر 'حفظ الفيديو'.");
+               alert("إذا لم يبدأ التحميل، اضغط مطولاً على الفيديو الذي ظهر أمامك الآن واختر 'حفظ الفيديو'.");
+            }, 500);
         };
     </script>
 </body>
